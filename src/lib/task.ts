@@ -115,14 +115,16 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
     if (this.state === undefined) {
       if (typeof this.enabledFn === 'function') {
         this.enabled = await this.enabledFn(ctx)
-      } /* istanbul ignore next */ else {
+      } else {
         this.enabled = this.enabledFn
       }
 
-      this.next({
-        type: 'ENABLED',
-        data: this.enabled
-      })
+      if (this.enabled) {
+        this.next({
+          type: 'ENABLED',
+          data: this.enabled
+        })
+      }
     }
   }
 
@@ -172,6 +174,14 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
     } else {
       return false
     }
+  }
+
+  public isRunning (): boolean {
+    return this.isPending() || this.isRollingBack() || this.isRetrying()
+  }
+
+  public hasFinalized (): boolean {
+    return this.isCompleted() || this.hasFailed() || this.hasRolledBack() || this.isSkipped()
   }
 
   async run (context: Ctx, wrapper: ListrTaskWrapper<Ctx, Renderer>): Promise<void> {
@@ -307,7 +317,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
         }
 
         if (this.listr.options?.exitAfterRollback !== false) {
-          // Do not exit when explicitely set to `false`
+          // Do not exit when explicitly set to `false`
           throw new Error(this.title)
         }
       } else {
@@ -323,7 +333,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
         wrapper.report(error)
 
         if (this.listr.options.exitOnError !== false) {
-          // Do not exit when explicitely set to `false`
+          // Do not exit when explicitly set to `false`
           throw error
         }
       }
