@@ -15,7 +15,7 @@ function isRendererSupported (renderer: ListrRendererFactory): boolean {
   return process.stdout.isTTY === true || renderer.nonTTY === true
 }
 
-function getRendererClass (renderer: ListrRendererValue): ListrRendererFactory {
+function getRendererClass (renderer?: ListrRendererValue): ListrRendererFactory {
   if (typeof renderer === 'string') {
     return renderers[renderer] || renderers.default
   }
@@ -24,7 +24,7 @@ function getRendererClass (renderer: ListrRendererValue): ListrRendererFactory {
 }
 
 export function getRenderer (
-  renderer: ListrRendererValue,
+  renderer?: ListrRendererValue,
   fallbackRenderer?: ListrRendererValue,
   fallbackCondition?: ListrOptions['rendererFallback'],
   silentCondition?: ListrOptions['rendererSilent']

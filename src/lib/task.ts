@@ -20,11 +20,11 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
   /** Unique id per task, randomly generated in the uuid v4 format */
   public id: string
   /** The current state of the task. */
-  public state: string
+  public state?: string
   /** The task object itself, to further utilize it. */
   public task: (ctx: Ctx, task: TaskWrapper<Ctx, Renderer>) => void | ListrTaskResult<Ctx>
   /** Extend current task with multiple subtasks. */
-  public subtasks: Task<Ctx, any>[]
+  public subtasks?: Task<Ctx, any>[]
   /** Title of the task */
   public title?: string
   /** Untouched unchanged title of the task */
@@ -59,8 +59,10 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
   public renderHook$: Subject<void>
 
   public prompt: undefined | PromptInstance | PromptError
-  private enabled: boolean
-  private enabledFn: ListrTask<Ctx, Renderer>['enabled']
+  public exitOnError!: boolean
+
+  private enabled!: boolean
+  private enabledFn: Exclude<ListrTask<Ctx, Renderer>['enabled'], undefined>
 
   constructor (public listr: Listr<Ctx, any, any>, public tasks: ListrTask<Ctx, any>, public options: ListrOptions, public rendererOptions: ListrGetRendererOptions<Renderer>) {
     super()
@@ -75,7 +77,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
 
     // parse functions
     this.skip = this.tasks?.skip || ((): boolean => false)
-    this.enabledFn = this.tasks?.enabled || ((): boolean => true)
+    this.enabledFn = this.tasks.enabled || ((): boolean => true)
 
     // task options
     this.rendererTaskOptions = this.tasks.options
@@ -104,7 +106,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
     }
   }
 
-  set output$ (data: string) {
+  set output$ (data: string | undefined) {
     this.output = data
 
     this.next({
@@ -122,7 +124,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
     })
   }
 
-  set title$ (title: string) {
+  set title$ (title: string | undefined) {
     this.title = title
 
     this.next({
@@ -148,7 +150,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
 
   /** Returns whether this task has subtasks. */
   public hasSubtasks (): boolean {
-    return this.subtasks?.length > 0
+    return this.subtasks ? this.subtasks?.length > 0 : false
   }
 
   /** Returns whether this task is in progress. */
@@ -335,7 +337,7 @@ export class Task<Ctx, Renderer extends ListrRendererFactory> extends Subject<Li
 
         if (this.listr.options?.exitAfterRollback !== false) {
           // Do not exit when explicitly set to `false`
-          throw new Error(this.title)
+          throw new Error(this.title ?? 'task with no title')
         }
       } else {
         /* istanbul ignore if */

@@ -14,25 +14,25 @@ import { PromptOptions } from '@utils/prompt.interface'
  * Extend the task to have more functionality while accesing from the outside.
  */
 export class TaskWrapper<Ctx, Renderer extends ListrRendererFactory> {
-  constructor (public task: Task<Ctx, ListrRendererFactory>, public errors: ListrError[], private options: ListrBaseClassOptions<Ctx, any, any>) {}
+  constructor (public task: Task<Ctx, ListrRendererFactory>, public errors: (ListrError | Error)[], private options: ListrBaseClassOptions<Ctx, any, any>) {}
 
   /** Change the title of the current task. */
-  set title (data: string) {
+  set title (data: string | undefined) {
     this.task.title$ = data
   }
 
   /** Get the title of the current task. */
-  get title (): string {
+  get title (): string | undefined {
     return this.task.title
   }
 
   /** Send a output to the output channel. */
-  set output (data: string) {
+  set output (data: string | undefined) {
     this.task.output$ = data
   }
 
   /** Get the output from the output channel. */
-  get output (): string {
+  get output (): string | undefined {
     return this.task.output
   }
 
@@ -55,7 +55,7 @@ export class TaskWrapper<Ctx, Renderer extends ListrRendererFactory> {
   /** Report a error in process for error collection. */
   public report (error: Error | ListrError): void {
     /* istanbul ignore if */
-    if (error instanceof ListrError) {
+    if (error instanceof ListrError && error.errors) {
       for (const err of error.errors) {
         this.errors.push(err)
         this.task.message$ = { error: err.message || this.task?.title || 'Task with no title.' }
